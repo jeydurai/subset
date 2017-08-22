@@ -1,0 +1,45 @@
+require 'subset'
+require 'optparse'
+
+options = {}
+options_parser = OptionParser.new do |opts|
+    opts.on("--sl3 SALES_LEVEL_3", "Reads 'sales_level_3' as input parameter") do |sl3|
+        options[:sl3] = sl3
+    end
+    opts.on("--sl4 SALES_LEVEL_4", "Reads 'sales_level_4' as input parameter") do |sl4|
+        options[:sl4] = sl4
+    end
+    opts.on("--sl5 SALES_LEVEL_5", "Reads 'sales_level_5' as input parameter") do |sl5|
+        options[:sl5] = sl5
+    end
+    opts.on("--sl6 SALES_LEVEL_6", "Reads 'sales_level_6' as input parameter") do |sl6|
+        options[:sl6] = sl6
+    end
+    opts.on("-y", "--year FISCAL_YEAR", "Reads 'financial year' as input parameter") do |year|
+        options[:year] = year 
+    end
+    opts.on("-q", "--quarter FISCAL_QUARTER", "Reads 'financial quarter' as input parameter") do |quarter|
+        options[:quarter] = quarter 
+    end
+    opts.on("-m", "--month FISCAL_MONTH", "Reads 'financial month' as input parameter") do |month|
+        options[:month] = month 
+    end
+    opts.on("-w", "--week FISCAL_WEEK", "Reads 'financial week' as input parameter") do |week|
+        options[:week] = week 
+    end
+    opts.on("-i", "--inc_years INCLUDE_PAST_YEARS", "Reads 'historical years' as input parameter") do |inc_years|
+        options[:inc_years] = inc_years 
+    end
+    opts.on("-x", "--sensitivity SENSITIVITY", "Reads Sensitivity for confidentiality") do |sensitivity|
+        options[:sensitivity] = sensitivity 
+    end
+    opts.on("-s", "--[no-]service", "Flag to consider services only") do |s|
+        options[:service] = s 
+    end
+    opts.on("-a", "--[no-]all", "Flag to consider products + services") do |a|
+        options[:all] = a 
+    end
+end
+
+options_parser.parse!
+Subset.run(options)
