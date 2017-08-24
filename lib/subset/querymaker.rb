@@ -5,11 +5,12 @@ module QueryMaker
     #== MongoDB Query generator
     class Mongo
 
+        attr_writer :year
+
         def initialize(opts)
             @sl3, @sl4, @sl5, @sl6 = opts[:sl3], opts[:sl4], opts[:sl5], opts[:sl6] 
             @year, @quarter, @month, @week = opts[:year], opts[:quarter], opts[:month], opts[:week] 
             @service, @all = opts[:service], opts[:all]
-            @past_years = opts[:inc_years]
             @sensitivity = opts[:sensitivity]
         end
 
@@ -55,12 +56,12 @@ module QueryMaker
 
         # 'fiscal_period_id' for month as MongoDB Match object
         def match_month
-            @month ? { 'fiscal_month_id' => /#{@month}/i } : {}
+            @month ? { 'fiscal_period_id' => @month.to_i } : {}
         end
 
         # 'fiscal_week_id' as MongoDB Match object
         def match_week
-            @week ? { 'fiscal_week_id' => /#{@week}/i } : {}
+            @week ? { 'fiscal_week_id' => @week.to_i } : {}
         end
 
         # Makes a consolidated match obj for period nodes 
@@ -104,10 +105,12 @@ module QueryMaker
         # Prepares Nodes group object
         def groupby_nodes
             {
-                'sales_level_3'     => '$sales_level_3',
-                'sales_level_4'     => '$sales_level_4',
-                'sales_level_5'     => '$sales_level_5',
-                'sales_level_6'     => '$sales_level_6'
+                'sales_level_3'      => '$sales_level_3',
+                'sales_level_4'      => '$sales_level_4',
+                'sales_level_5'      => '$sales_level_5',
+                'sales_level_6'      => '$sales_level_6',
+                'services_indicator' => '$services_indicator',
+                'book_adj_code'      => '$bookings_adjustments_code'
             } 
         end
 
@@ -151,26 +154,28 @@ module QueryMaker
         # Prepares Nodes project object
         def project_nodes
             {
-                'L3'     => '$_id.sales_level_3',
-                'L4'     => '$_id.sales_level_4',
-                'L5'     => '$_id.sales_level_5',
-                'L6'     => '$_id.sales_level_6'
+                'L3'            => '$_id.sales_level_3',
+                'L4'            => '$_id.sales_level_4',
+                'L5'            => '$_id.sales_level_5',
+                'L6'            => '$_id.sales_level_6',
+                'Services_Flag' => '$_id.services_indicator',
+                'Book_Adj_Code' => '$_id.book_adj_code'
             } 
         end
 
         # Prepares project object for 'Booking Net'
         def project_bookingnet
-            { 'BookingNet' => '$_id.booking_net' } 
+            { 'BookingNet' => '$booking_net' } 
         end
 
         # Prepares project object for 'Base List'
         def project_baselist
-            { 'BaseList' => { '$_id.base_list' } } 
+            { 'BaseList' => '$base_list'  } 
         end
 
         # Prepares project object for 'Standard Cost'
         def project_standardcost
-            { 'StdCost' => '$_id.std_cost' } } 
+            { 'StdCost' => '$std_cost' } 
         end
 
         # Returns aggregate 'project' object
@@ -189,7 +194,7 @@ module QueryMaker
             :groupby_periods, :groupby_nodes, :groupby_fields, :groupby_values, 
             :groupby_bookingnet, :groupby_bookingnet, :groupby_baselist, :groupby_standardcost,
             :project_periods, :project_nodes, :project_bookingnet, :project_bookingnet, 
-            :project_baselist, :project_standardcost,
+            :project_baselist, :project_standardcost
 
         public :match_sales_levels, :match_periods, :match_services_indicator, :match_query,
             :group_all, :project_all

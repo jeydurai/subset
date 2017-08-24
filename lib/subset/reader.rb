@@ -13,15 +13,20 @@ module Reader
         end
 
         # Reads the data by running aggregation query
-        def run_agg qry
+        def agg_each qry
             raise "[Error]: Aggregation query object is empty" unless qry
+            rec = 0
             @coll.aggregate(qry).each do |doc|
-                @data = @data + [doc]
+                rec += 1
+                yield doc, rec
             end
-            puts "Data contains #{@data.size} doc(s)"
         end
 
-        public :run_agg
+        def agg_count qry
+            @coll.aggregate(qry).count
+        end
+
+        public :agg_each, :agg_count
 
     end
 

@@ -33,4 +33,18 @@ module Connector
 
     end
 
+
+    class ExcelWriteConnector
+        require 'rubyXL'
+
+        attr_accessor :wb, :ws
+
+        def initialize(path)
+            @path = path
+            @wb = RubyXL::Workbook.new
+            @ws = @wb.worksheets[0]
+        end
+
+    end
+
 end
