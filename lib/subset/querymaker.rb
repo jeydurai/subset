@@ -12,6 +12,30 @@ module QueryMaker
             @year, @quarter, @month, @week = opts[:year], opts[:quarter], opts[:month], opts[:week] 
             @service, @all = opts[:service], opts[:all]
             @sensitivity = opts[:sensitivity]
+            @period_fields = [ 'fiscal_quarter_id' ]
+            @nodes_fields = [ 'sales_level_3', 'sales_level_4', 'sales_level_5', 'sales_level_6', 
+                              'services_indicator', 'bookings_adjustments_code' ]
+            add_more_fields(opts[:more].to_i) if opts[:more]
+        end
+
+        # Adds more fields based on user's preference through 'more' option
+        def add_more_fields more
+            if more > 0
+                [ 'tbm', 'customer_name',  'partner_name' ].each { |e| @nodes_fields << e }
+            end
+            if more > 1
+                [ 'product_classification', 'internal_business_entity_name', 'cbn_flag' ].each { |e| @nodes_fields << e }
+            end
+            if more > 2
+                [ 'fiscal_period_id' ].each { |e| @period_fields << e }
+            end
+            if more > 3
+                [ 'fiscal_week_id' ].each { |e| @period_fields << e }
+            end
+            if more > 4
+                [ 'product_id', 'sales_order_number_detail', 'erp_deal_id' ].each { |e| @nodes_fields << e }
+            end
+            raise "[Error]: 'More' option can not exeed 5" if more > 5
         end
 
         # 'sales_level_3' as MongoDB Match object
@@ -92,26 +116,29 @@ module QueryMaker
         # Generates Group by fields
         def groupby_fields
             ids = {}
-            ids.merge!(groupby_periods)
-            ids.merge!(groupby_nodes)
+            ids.merge!(make_grp_prj_periods[0])
+            ids.merge!(make_grp_prj_nodes[0])
             { '_id' => ids }
         end
 
-        # Prepares Periods group object
-        def groupby_periods
-            { 'fiscal_quarter_id' => '$fiscal_quarter_id' } 
+        # Makes Aggregation Group and Project periods from an array
+        def make_grp_prj_periods
+            grp = {}; prj = {}
+            @period_fields.each do |period|
+                obj[period] = '$' + period
+                prj[period] = '$_id.' + period
+            end
+            return [grp, prj]
         end
 
-        # Prepares Nodes group object
-        def groupby_nodes
-            {
-                'sales_level_3'      => '$sales_level_3',
-                'sales_level_4'      => '$sales_level_4',
-                'sales_level_5'      => '$sales_level_5',
-                'sales_level_6'      => '$sales_level_6',
-                'services_indicator' => '$services_indicator',
-                'book_adj_code'      => '$bookings_adjustments_code'
-            } 
+        # Makes Aggregation Group and Project objects from an array
+        def make_grp_prj_nodes
+            grp = {}; prj = {}
+            @nodes_fields.each do |node|
+                obj[node] = '$' + node
+                prj[node] = '$_id.' + node
+            end
+            return [grp, prj]
         end
 
         # Prepares group object for 'Booking Net'
@@ -146,23 +173,6 @@ module QueryMaker
             { '$group' => grp }
         end
 
-        # Prepares Periods project object
-        def project_periods
-            { 'Quarter' => '$_id.fiscal_quarter_id' } 
-        end
-
-        # Prepares Nodes project object
-        def project_nodes
-            {
-                'L3'            => '$_id.sales_level_3',
-                'L4'            => '$_id.sales_level_4',
-                'L5'            => '$_id.sales_level_5',
-                'L6'            => '$_id.sales_level_6',
-                'Services_Flag' => '$_id.services_indicator',
-                'Book_Adj_Code' => '$_id.book_adj_code'
-            } 
-        end
-
         # Prepares project object for 'Booking Net'
         def project_bookingnet
             { 'BookingNet' => '$booking_net' } 
@@ -181,8 +191,8 @@ module QueryMaker
         # Returns aggregate 'project' object
         def project_all
             prj = { '_id' => 0 }
-            prj.merge!(project_periods)
-            prj.merge!(project_nodes)
+            prj.merge!(make_grp_prj_periods[1])
+            prj.merge!(make_grp_prj_nodes[1])
             prj.merge!(project_bookingnet)
             prj.merge!(project_baselist) unless @sensitivity >= 2
             prj.merge!(project_standardcost) unless @sensitivity >= 1
@@ -194,7 +204,8 @@ module QueryMaker
             :groupby_periods, :groupby_nodes, :groupby_fields, :groupby_values, 
             :groupby_bookingnet, :groupby_bookingnet, :groupby_baselist, :groupby_standardcost,
             :project_periods, :project_nodes, :project_bookingnet, :project_bookingnet, 
-            :project_baselist, :project_standardcost
+            :project_baselist, :project_standardcost, :make_grp_prj_periods, :make_grp_prj_nodes, 
+            :add_more_fields
 
         public :match_sales_levels, :match_periods, :match_services_indicator, :match_query,
             :group_all, :project_all
