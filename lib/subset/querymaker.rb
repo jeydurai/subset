@@ -21,10 +21,10 @@ module QueryMaker
         # Adds more fields based on user's preference through 'more' option
         def add_more_fields more
             if more > 0
-                [ 'tbm', 'customer_name',  'partner_name' ].each { |e| @nodes_fields << e }
+                [ 'product_classification', 'internal_business_entity_name', 'cbn_flag' ].each { |e| @nodes_fields << e }
             end
             if more > 1
-                [ 'product_classification', 'internal_business_entity_name', 'cbn_flag' ].each { |e| @nodes_fields << e }
+                [ 'tbm', 'customer_name',  'partner_name' ].each { |e| @nodes_fields << e }
             end
             if more > 2
                 [ 'fiscal_period_id' ].each { |e| @period_fields << e }
@@ -125,7 +125,7 @@ module QueryMaker
         def make_grp_prj_periods
             grp = {}; prj = {}
             @period_fields.each do |period|
-                obj[period] = '$' + period
+                grp[period] = '$' + period
                 prj[period] = '$_id.' + period
             end
             return [grp, prj]
@@ -135,7 +135,7 @@ module QueryMaker
         def make_grp_prj_nodes
             grp = {}; prj = {}
             @nodes_fields.each do |node|
-                obj[node] = '$' + node
+                grp[node] = '$' + node
                 prj[node] = '$_id.' + node
             end
             return [grp, prj]
@@ -201,9 +201,8 @@ module QueryMaker
 
         private :match_sl3, :match_sl4, :match_sl5, :match_sl6,
             :match_year, :match_quarter, :match_month, :match_week,
-            :groupby_periods, :groupby_nodes, :groupby_fields, :groupby_values, 
-            :groupby_bookingnet, :groupby_bookingnet, :groupby_baselist, :groupby_standardcost,
-            :project_periods, :project_nodes, :project_bookingnet, :project_bookingnet, 
+            :groupby_fields, :groupby_values, :groupby_bookingnet, :groupby_bookingnet, 
+            :groupby_baselist, :groupby_standardcost, :project_bookingnet, :project_bookingnet, 
             :project_baselist, :project_standardcost, :make_grp_prj_periods, :make_grp_prj_nodes, 
             :add_more_fields
 

@@ -65,11 +65,11 @@ class ReportMaker < QueryMaker::Mongo
         agg_qry = [ match_query, group_all, project_all ]
         @reader.agg_each(agg_qry) do |doc, i|
             data = doc.clone
-            data['Year'] = data['Quarter'][0, 4]
-            if data['Book_Adj_Code'] =~ /^L/i
-                data['Cloud Flag'] = 'Y' 
+            data['fiscal_year_id'] = data['fiscal_quarter_id'][0, 4]
+            if data['bookings_adjustments_code'] =~ /^L/i
+                data['cloud_flag'] = 'Y' 
             else
-                data['Cloud Flag'] = 'N'
+                data['cloud_flag'] = 'N'
             end
             header = data.keys 
             if header_flag

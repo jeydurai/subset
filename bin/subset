@@ -39,6 +39,9 @@ options_parser = OptionParser.new do |opts|
     opts.on("-a", "--[no-]all", "Flag to consider products + services") do |a|
         options[:all] = a 
     end
+    opts.on("-o", "--more MORE", "Contains 5 levels to add more fields for visisbility") do |more|
+        options[:more] = more 
+    end
 end
 
 options_parser.parse!
